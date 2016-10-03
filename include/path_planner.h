@@ -11,6 +11,7 @@
 #include <octomap_msgs/Octomap.h>
 #include <octomap_msgs/conversions.h>
 #include <octomap/octomap.h>
+#include <visualization_msgs/MarkerArray.h>
 #include "surface_function.h"
 
 
@@ -69,6 +70,8 @@ public:
     double getYawCommand();
 
     double getYawError();
+
+    visualization_msgs::MarkerArray markerArray;
 
 private:
 

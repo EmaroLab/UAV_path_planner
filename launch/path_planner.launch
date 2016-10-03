@@ -1,17 +1,17 @@
 <launch>
 	<node pkg="path_planner" type="path_planner_node" name="path_planner_node" output="screen">
 		<param name="frame_id" type="string" value="world" />
-		<param name="surfFlag" type="int" value="-1" />
+		<param name="surfFlag" type="int" value="1" />
 		<param name="surfToBeDef" type="int" value="1" />
 		<param name="tangFlag" type="int" value="-1" />
 		<param name="run_time" type="bool" value="true" />
-		<param name="sigma_multiplier" type="double" value="5" />
+		<param name="sigma_multiplier" type="double" value="10" />
 		<param name="xyGain" type="double" value="0.1" />
 		<param name="zGain" type="double" value="0.1" />
 		<param name="Kgrad1" type="double" value="0.1" />
-		<param name="Kgrad2" type="double" value="0.4" />
-		<param name="Ktang" type="double" value="0.9" />
-		<param name="dist_sensed_obs" type="double" value="0.65" />
+		<param name="Kgrad2" type="double" value="0.2" />
+		<param name="Ktang" type="double" value="0.5" />
+		<param name="dist_sensed_obs" type="double" value="0.5" />
 		<param name="pcRaise" type="double" value="0.0" />
 		<param name="safety_margin" type="double" value="0.3" />
 		

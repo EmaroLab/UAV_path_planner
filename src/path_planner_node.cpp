@@ -5,6 +5,7 @@
 #include <visualization_msgs/Marker.h>
 #include "cylinder.h"
 #include "plane.h"
+#include <unistd.h>
 
 PathPlanner* pathPlanner;
 double pcRaise;
@@ -19,20 +20,23 @@ void pose_cb (const geometry_msgs::PoseStamped pose_msg);
 
 int main (int argc, char** argv) {
 
-//    Surface_function* f1 = new Cylinder(1,1,0,0);
-    Surface_function* f1 = new Plane(1,0,0,0);
-    Surface_function* f2 = new Plane (0,0,1,-0.7);
+    Surface_function* f1 = new Cylinder(1.5,3,0,0);
+//    Surface_function* f1 = new Plane(1,0,0,0);
+    Surface_function* f2 = new Plane (0,0,1,-0.4);
     pathPlanner = new PathPlanner(f1,f2);
 
     // Initialize ROS
     ros::init (argc, argv, "trajectory_planner_node");
     ros::NodeHandle nh("~");
+
     ros::Subscriber octomapSub = nh.subscribe<octomap_msgs::Octomap> ("/map_in", 1, octomap_cb);
     //ros::Subscriber pointCloudSub = nh.subscribe<sensor_msgs::PointCloud2>("map_in",1,cloud_cb);
     ros::Subscriber poseSub = nh.subscribe<geometry_msgs::PoseStamped>("/pose_in",1,pose_cb);
 
     ros::Publisher pub = nh.advertise<asctec_hl_comm::mav_ctrl>("/command_out",1);
     ros::Publisher markerPub = nh.advertise<visualization_msgs::Marker>("velocity_vector_marker",1);
+    ros::Publisher markerArrayPub = nh.advertise<visualization_msgs::MarkerArray>("/octomap_vis",1);
+    ros::Publisher vectorialFieldPub = nh.advertise<visualization_msgs::MarkerArray>("/vectorial_field",1,true);
     getParams(nh);
 
     asctec_hl_comm::mav_ctrl velocityMsg;
@@ -41,12 +45,53 @@ int main (int argc, char** argv) {
     geometry_msgs::PoseStamped robotPose;
     Eigen::Vector3d velocityVector;
     tf::Quaternion desiredRotation;
+    visualization_msgs::MarkerArray vectorial_field;
 
     visualization_msgs::Marker visualization_vector;
     geometry_msgs::Point vectorTip;
 
+    ROS_INFO("Waiting for map message to be published");
+    ros::topic::waitForMessage<octomap_msgs::Octomap>("/map_in",nh);
+    ros::spinOnce();
+    ROS_INFO("Map received. Plotting vectorial field");
+    double step = 0.2;
+    int id = 0;
+    for (double x = -2; x < 2; x += step){
+        for (double y = -2.5; y < 2.5; y+= step){
+            pathPlanner->setRobotPose(x,y,0.4,tf::Quaternion(0,0,0,1));
+            pathPlanner->run();
+            velocityVector = pathPlanner->getVelocityVector();
+            visualization_vector.header.frame_id = "world";
+            visualization_vector.id = id;
+            visualization_vector.type=visualization_msgs::Marker::ARROW;
+            visualization_vector.points.clear();
+            geometry_msgs::Point point;
+            point.x = x;
+            point.y = y;
+            point.z = 0.4;
+            visualization_vector.points.push_back(point);
+            vectorTip.x = x + velocityVector(0)*2;
+            vectorTip.y = y + velocityVector(1)*2;
+            vectorTip.z = 0.4 + velocityVector(2)*2;
+            visualization_vector.points.push_back(vectorTip);
+            visualization_vector.scale.x = 0.02;
+            visualization_vector.scale.y = 0.04;
+            visualization_vector.scale.z = 0.08;
+            visualization_vector.color.a = 1;
+            visualization_vector.color.r = 1;
+            vectorial_field.markers.push_back(visualization_vector);
+            std::cout << f1->computeFunctionValue(x,y,0.4);
+            id ++;
+        }
+    }
+    vectorialFieldPub.publish(vectorial_field);
+    return(0);
+
+
+
     // Spin
     ros::Rate rate(100);
+//    visualization_msgs::MarkerArray empty;
 
     while (ros::ok()){
         pathPlanner->run();
@@ -83,7 +128,14 @@ int main (int argc, char** argv) {
         visualization_vector.color.a = 1;
         visualization_vector.color.r = 1;
         markerPub.publish(visualization_vector);
-
+//        if (pathPlanner->markerArray.markers.size() > 3000) {
+//            std::cout << pathPlanner->markerArray.markers[3].pose.position << std::endl;
+//            std::cout << pathPlanner->markerArray.markers[300].pose.position << std::endl;
+//            std::cout << pathPlanner->markerArray.markers[3000].pose.position << std::endl;
+//        }
+//        markerArrayPub.publish(empty);
+        markerArrayPub.publish(pathPlanner->markerArray);
+        pathPlanner->markerArray.markers.clear();
         pub.publish(velocityMsg);
         ros::spinOnce ();
         rate.sleep();
@@ -211,11 +263,13 @@ void octomap_cb (const octomap_msgs::Octomap map_msg) {
                 end=octree->end_leafs(); it!= end; ++it)
     {
         if (octree->isNodeOccupied(it.operator*())) {
-            Xo(numOccupiedLeaves) = it.getCoordinate().x();
-            Yo(numOccupiedLeaves) = it.getCoordinate().y();
-            Zo(numOccupiedLeaves) = it.getCoordinate().z()+ pcRaise;
-            Sizeo(numOccupiedLeaves) = it.getSize();
-            numOccupiedLeaves++;
+            if (it.getCoordinate().z() > 0.3) {
+                Xo(numOccupiedLeaves) = it.getCoordinate().x();
+                Yo(numOccupiedLeaves) = it.getCoordinate().y();
+                Zo(numOccupiedLeaves) = it.getCoordinate().z() + pcRaise;
+                Sizeo(numOccupiedLeaves) = it.getSize();
+                numOccupiedLeaves++;
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 #include <path_planner.h>
-
+#include <fstream>
+#include <iostream>
 PathPlanner::PathPlanner(){};
 
 PathPlanner::PathPlanner(Surface_function* f1, Surface_function* f2) {
@@ -57,7 +58,13 @@ void PathPlanner::setRobotPose(geometry_msgs::PoseStamped pose){
     x = pose.pose.position.x;
     y = pose.pose.position.y;
     z = pose.pose.position.z;
-
+//    double fval = f1->computeFunctionValue(x,y,z);
+//    if (fval > 0 ){
+//        this->setSurfFlag(-1);
+//    }else{
+//        this->setSurfFlag(1);
+//    }
+    //std::cout << surfFlag << std::endl;
 };
 
 void PathPlanner::setObstacleCoordinates(Eigen::VectorXd Xo,Eigen::VectorXd Yo,Eigen::VectorXd Zo, Eigen::VectorXd Sizeo) {
@@ -225,14 +232,41 @@ void PathPlanner::computeSensedObstacles() {
     numSensedObs = 0;
     for (int i = 0; i < o_sensed.size(); i++){
         sigma(i) = sigma_multiplier * pow(Sizeo(i),2);
-        if (o_dist(i) < sigma(i)) {
+        if (o_dist(i) < dist_sensed_obs) {
+            visualization_msgs::Marker obsMarker;
+            geometry_msgs::Point point;
+            point.x = Xo(i);
+            point.y = Yo(i);
+            point.z = Zo(i);
+            obsMarker.points.push_back(point);
+//            obsMarker.pose.position.x = Xo(i);
+//            obsMarker.pose.position.y = Yo(i);
+//            obsMarker.pose.position.z = Zo(i);
+            obsMarker.lifetime = ros::Duration(1,0);
+            obsMarker.pose.orientation.x = 0;
+            obsMarker.pose.orientation.y = 0;
+            obsMarker.pose.orientation.z = 0;
+            obsMarker.pose.orientation.w = 1;
+            obsMarker.color.a = 1;
+            obsMarker.color.b = 1;
+            obsMarker.header.stamp = ros::Time::now();
+            obsMarker.header.frame_id = "world";
+            //obsMarker.ns = "~";
+            obsMarker.id = i;
+            obsMarker.scale.x = Sizeo(i)-safety_margin;
+            obsMarker.scale.y = Sizeo(i)-safety_margin;
+            obsMarker.scale.z = Sizeo(i)-safety_margin;
+            obsMarker.type = visualization_msgs::Marker::CUBE_LIST;
+            obsMarker.action = 0;
+
+            markerArray.markers.push_back(obsMarker);
             o_sensed(i) = 1;
             numSensedObs++;
         } else {
             o_sensed(i) = 0;
         }
     }
-
+    //std::cout << markerArray.markers.size() << std::endl;
     //std::cout << "sizeo = " << Sizeo(1) << std::endl;
     //std::cout << "sigma = " << sigma(1) << std::endl;
     std::cout << "numSensedObs = " << numSensedObs <<std::endl;
@@ -249,8 +283,8 @@ void PathPlanner::computeObstaclesAmplitude() {
         } else {
 
             // this variable is introduced to simplify computations later
-            double min_inv = 1 / (1 + cos(Sizeo(o) * M_PI / sqrt(sigma(o))));
-
+            //double min_inv = 1 / (1 + cos(Sizeo(o) * M_PI / sqrt(sigma(o))));
+            double min_inv = exp(pow(Sizeo(o),2)/sigma(o));
             // compute the parameters of the hyperplane tangent to f1(x,y,z) in xc yc zc
             Eigen::Vector3d gradFr;
             double fvalr;
@@ -306,6 +340,7 @@ void PathPlanner::computeObstaclesAmplitude() {
                 // compute a proper value for the amplitude of the Bell function
                 // obstacles in the half-plane with y < x
                 A(o) = std::max(0.0, -minFl * min_inv);
+                //A(o) = -minFl * min_inv;
             }
         }
     }
@@ -337,17 +372,36 @@ void PathPlanner::computeIntermediateVariables() {
 //    der_core_2 << der_core;
 //    der_core_3 = o_sensed_A*pi_sigma*o_dist_inv*o_dist_1_2_inv;
 
-    GAUSSIAN = o_sensed_A*(cos_f_core + 1);
+//    GAUSSIAN = o_sensed_A*(cos_f_core + 1);
+    GAUSSIAN = o_sensed_A*exp(-o_dist/sigma);
 
-    foxGAUSSIAN = der_core*x_dist;
-    foyGAUSSIAN = der_core*y_dist;
-    fozGAUSSIAN = der_core*z_dist;
+    std::ofstream myfile ("example.txt");
+    if (myfile.is_open())
+    {
+        //std::cout << "saving" << std::endl;
+        int count;
+        for(count = 0; count < GAUSSIAN.size(); count ++){
+            myfile << GAUSSIAN[count] << " " ;
+        }
+        //std::cout << count << std::endl;
+        myfile.close();
+    }
+    else std::cout << "Unable to open file";
+//
+//    foxGAUSSIAN = der_core*x_dist;
+//    foyGAUSSIAN = der_core*y_dist;
+//    fozGAUSSIAN = der_core*z_dist;
+
+    foxGAUSSIAN = -2 * o_sensed_A * x_dist/sigma * exp(-o_dist.pow(2)/sigma);
+    foyGAUSSIAN = -2 * o_sensed_A * y_dist/sigma * exp(-o_dist.pow(2)/sigma);
+    fozGAUSSIAN = -2 * o_sensed_A * z_dist/sigma * exp(-o_dist.pow(2)/sigma);
+
 };
 
 void PathPlanner::computeObstaclesContribution(){
     fo = GAUSSIAN.sum();
     foGrad << foxGAUSSIAN.sum(),foyGAUSSIAN.sum(),fozGAUSSIAN.sum();
-    std::cout << "fo = " << fo << std::endl;
+    //std::cout << "fo = " << fo << std::endl;
     //std::cout << "foGrad = " << foGrad << std::endl;
 
 };
@@ -363,19 +417,19 @@ void PathPlanner::computeVelocityVector() {
 
     //sum obstacle contribution to the surface defined by surfToBeDef
     if (surfToBeDef == 2) {
+        f2val *= surfFlag;
+        grad2 *= surfFlag;
         if (hasObstacles) {
             f2val += fo;
             grad2 += foGrad;
         }
-        f2val *= surfFlag;
-        grad2 *= surfFlag;
     } else {
+        f1val *= surfFlag;
+        grad1 *= surfFlag;
         if (hasObstacles) {
             f1val += fo;
             grad1 += foGrad;
         }
-        f1val *= surfFlag;
-        grad1 *= surfFlag;
     }
 
     // normalize the results
