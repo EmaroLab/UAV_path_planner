@@ -244,7 +244,8 @@ void PathPlanner::computeSensedObstacles() {
 //            obsMarker.action = 0;
 //
 //            markerArray.markers.push_back(obsMarker);
-            o_sensed(i) = (dist_sensed_obs - o_dist(i))/dist_sensed_obs;
+            //o_sensed(i) = (dist_sensed_obs - o_dist(i))/dist_sensed_obs;
+            o_sensed(i) = pow(o_dist(i)- dist_sensed_obs,2) / pow(dist_sensed_obs,2);
             numSensedObs++;
         } else {
             o_sensed(i) = 0;// pow(dist_sensed_obs / o_dist(1),3);
