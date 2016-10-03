@@ -67,6 +67,8 @@ int main (int argc, char** argv) {
     velocityMsg.type = 2;
     velocityMsg.header.frame_id = "world";
 
+    Eigen::MatrixXd command_window (3,100);
+
     // Spin
     ros::Rate rate(100);
 
@@ -82,10 +84,16 @@ int main (int argc, char** argv) {
         velocityMsg.z = velocityVector(2);
         velocityMsg.yaw = pathPlanner->getYawCommand();
 
-        //If yaw error  is too high stop moving along xy plane and wait to rotate
+        for (int i = 0; i < command_window.cols()-1; i++){
+            command_window.col(i) << 0.95 * command_window.col(i+1);
+        }
+
+        command_window.col(command_window.cols()-1) << velocityVector;
+
+        //If yaw error  is too high stop moving along xy plane and wait for rotation
         if (fabs(pathPlanner->getYawError()) < 0.3){
-            velocityMsg.x = velocityVector(0);
-            velocityMsg.y = velocityVector(1);
+            velocityMsg.x = command_window.row(0).sum()/command_window.size();
+            velocityMsg.y = command_window.row(1).sum()/command_window.size();
         }else{
             velocityMsg.x = 0;
             velocityMsg.y = 0;
