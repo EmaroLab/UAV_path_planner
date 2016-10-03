@@ -71,7 +71,11 @@ public:
 
     double getYawError();
 
-    visualization_msgs::MarkerArray markerArray;
+    double getf1val();
+
+    double getf2val();
+
+//    visualization_msgs::MarkerArray markerArray;
 
 private:
 
@@ -92,6 +96,8 @@ private:
     Surface_function* f1;
     Surface_function* f2;
 
+    double f1val;
+    double f2val;
 
     //Coordinate and size of obstacles
     Eigen::VectorXd Xo;
@@ -132,7 +138,7 @@ private:
     double dist_sensed_obs;
 
     //Logical Array to determine which obstacles to consider
-    Eigen::ArrayXi o_sensed;
+    Eigen::ArrayXd o_sensed;
     int numSensedObs;
 
     //Intermediate variables introduce to simplify computation

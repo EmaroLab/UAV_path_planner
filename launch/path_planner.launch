@@ -3,18 +3,19 @@
 		<param name="frame_id" type="string" value="world" />
 		<param name="surfFlag" type="int" value="1" />
 		<param name="surfToBeDef" type="int" value="1" />
-		<param name="tangFlag" type="int" value="-1" />
+		<param name="tangFlag" type="int" value="1" />
 		<param name="run_time" type="bool" value="true" />
-		<param name="sigma_multiplier" type="double" value="10" />
+		<param name="sigma_multiplier" type="double" value="5" />
 		<param name="xyGain" type="double" value="0.1" />
 		<param name="zGain" type="double" value="0.1" />
-		<param name="Kgrad1" type="double" value="0.1" />
-		<param name="Kgrad2" type="double" value="0.2" />
-		<param name="Ktang" type="double" value="0.5" />
+		<param name="Kgrad1" type="double" value="0.2" />
+		<param name="Kgrad2" type="double" value="0.1" />
+		<param name="Ktang" type="double" value="0.7" />
 		<param name="dist_sensed_obs" type="double" value="0.5" />
 		<param name="pcRaise" type="double" value="0.0" />
 		<param name="safety_margin" type="double" value="0.3" />
-		
+		<param name="publish_vectorial_field" type="bool" value="true"/>
+
 		<remap from="map_in" to="octomap_full" />
 		<remap from="pose_in" to="Robot_1/pose"/>
 		<remap from="command_out" to="fcu/control"/>
