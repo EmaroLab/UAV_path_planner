@@ -43,13 +43,12 @@ int main (int argc, char** argv) {
     ros::Publisher pub = nh.advertise<asctec_hl_comm::mav_ctrl>("/command_out",1);
     ros::Publisher markerPub = nh.advertise<visualization_msgs::Marker>("velocity_vector_marker",1);
 //  ros::Publisher markerArrayPub = nh.advertise<visualization_msgs::MarkerArray>("/octomap_vis",1);
-    ros::Publisher pathPublisher = nh.advertise<nav_msgs::Path>("/path",1,true);
+    //ros::Publisher pathPublisher = nh.advertise<nav_msgs::Path>("/path",1,true);
 
     getParams(nh);
 
     if (publish_vectorial_field) {
         publishVectorialField(nh);
-        return(0);
     }
 
     //Declaring messages
@@ -118,7 +117,6 @@ int main (int argc, char** argv) {
 //        markerArrayPub.publish(pathPlanner->markerArray);
 //        pathPlanner->markerArray.markers.clear();
         pub.publish(velocityMsg);
-
         ros::spinOnce ();
         rate.sleep();
     }
@@ -165,15 +163,21 @@ void publishVectorialField(ros::NodeHandle &nh) {
             visualization_vector.color.a = 1;
             visualization_vector.color.r = 1;
             vectorial_field.markers.push_back(visualization_vector);
-            //std::cout << f1->computeFunctionValue(x,y,0.4);
-//            if (fabs(pathPlanner->getf1val()) < 0.1){
-//                path.poses.push_back(pathPlanner->getRobotPose());
-//            }
             id ++;
         }
     }
-    //pathPublisher.publish(path);
-    vectorialFieldPub.publish(vectorial_field);
+
+    while (vectorialFieldPub.getNumSubscribers() == 0){
+        ROS_INFO("Waiting for subscribers to receive the vectorial field message");
+        sleep(1);
+    }
+
+    //I have to publish several times for a remote machine to receive the message.
+    //TODO Find a better solution
+    for (int i = 0; i < 1000; i ++){
+        vectorialFieldPub.publish(vectorial_field);
+    }
+    ROS_INFO("Vectorial field published");
 }
 
 void getParams(ros::NodeHandle &nh) {
