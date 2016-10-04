@@ -3,9 +3,9 @@
 		<param name="frame_id" type="string" value="world" />
 		<param name="surfFlag" type="int" value="-1" />
 		<param name="surfToBeDef" type="int" value="1" />
-		<param name="tangFlag" type="int" value="1" />
+		<param name="tangFlag" type="int" value="-1" />
 		<param name="run_time" type="bool" value="true" />
-		<param name="sigma_multiplier" type="double" value="10" />
+		<param name="sigma_multiplier" type="double" value="15" />
 		<param name="xyGain" type="double" value="0.1" />
 		<param name="zGain" type="double" value="0.1" />
 		<param name="Kgrad1" type="double" value="0.1" />

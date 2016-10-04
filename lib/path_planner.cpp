@@ -360,18 +360,18 @@ void PathPlanner::computeIntermediateVariables() {
 //    GAUSSIAN = o_sensed_A*(cos_f_core + 1);
     GAUSSIAN = o_sensed_A*exp(-o_dist/sigma);
 
-    std::ofstream myfile ("example.txt");
-    if (myfile.is_open())
-    {
-        //std::cout << "saving" << std::endl;
-        int count;
-        for(count = 0; count < GAUSSIAN.size(); count ++){
-            myfile << GAUSSIAN[count] << " " ;
-        }
-        //std::cout << count << std::endl;
-        myfile.close();
-    }
-    else std::cout << "Unable to open file";
+//    std::ofstream myfile ("example.txt");
+//    if (myfile.is_open())
+//    {
+//        //std::cout << "saving" << std::endl;
+//        int count;
+//        for(count = 0; count < GAUSSIAN.size(); count ++){
+//            myfile << GAUSSIAN[count] << " " ;
+//        }
+//        //std::cout << count << std::endl;
+//        myfile.close();
+//    }
+//    else std::cout << "Unable to open file";
 //
 //    foxGAUSSIAN = der_core*x_dist;
 //    foyGAUSSIAN = der_core*y_dist;
@@ -411,16 +411,27 @@ void PathPlanner::computeVelocityVector() {
 
     //sum obstacle contribution to the surface defined by surfToBeDef
     if (surfToBeDef == 2) {
+
         f2val *= surfFlag;
         grad2 *= surfFlag;
         if (hasObstacles) {
+
+            //We want to deform the trajectory along z only
+            foGrad (0) = 0;
+            foGrad (1) = 0;
+
             f2val += fo;
             grad2 += foGrad;
         }
     } else {
+
         f1val *= surfFlag;
         grad1 *= surfFlag;
         if (hasObstacles) {
+
+            //We want to deform the trajectory along xy only
+            foGrad(2) = 0;
+
             f1val += fo;
             grad1 += foGrad;
         }

@@ -26,7 +26,7 @@ void publishVectorialField(ros::NodeHandle &nh);
 int main (int argc, char** argv) {
 
 //    Surface_function* f1 = new Cylinder(1.5,3,0,0);
-    Surface_function* f1 = new Plane(1,0,0,0);
+    Surface_function* f1 = new Plane(1,0,0,1);
     Surface_function* f2 = new Plane (0,0,1,-0.4);
     pathPlanner = new PathPlanner(f1,f2);
 
@@ -66,7 +66,7 @@ int main (int argc, char** argv) {
     velocityMsg.type = asctec_hl_comm::mav_ctrl::velocity;
     velocityMsg.header.frame_id = "world";
 
-    Eigen::MatrixXd command_window (3,100);
+    Eigen::MatrixXd command_window (3,300);
 
     // Spin
     ros::Rate rate(100);
@@ -90,7 +90,7 @@ int main (int argc, char** argv) {
         velocityMsg.yaw = pathPlanner->getYawCommand();
 
         //If yaw error  is too high stop moving along xy plane and wait for rotation
-        if (fabs(pathPlanner->getYawError()) < 0.6){
+        if (fabs(pathPlanner->getYawError()) < 1){
             velocityMsg.x = command_window.row(0).sum()/command_window.cols();
             velocityMsg.y = command_window.row(1).sum()/command_window.cols();
         }else{
@@ -288,7 +288,7 @@ void octomap_cb (const octomap_msgs::Octomap map_msg) {
                 end=octree->end_leafs(); it!= end; ++it)
     {
         if (octree->isNodeOccupied(it.operator*())) {
-            if (it.getCoordinate().z() > 0.1) {
+            if (it.getCoordinate().z() > 0.25) {
                 Xo(numOccupiedLeaves) = it.getCoordinate().x();
                 Yo(numOccupiedLeaves) = it.getCoordinate().y();
                 Zo(numOccupiedLeaves) = it.getCoordinate().z() + pcRaise;
