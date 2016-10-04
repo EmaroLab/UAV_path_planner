@@ -304,7 +304,7 @@ void PathPlanner::computeObstaclesAmplitude() {
                 // compute a proper value for the amplitude of the Bell function
                 // obstacles in the half-plane with y < x
 //                A(o) = std::max(0.0, -minFr * min_inv);
-                A(o) = - minFr * min_inv;
+                A(o) = fabs(-minFr * min_inv);
             }
 
             if (surfFlag == -1) {
@@ -325,7 +325,7 @@ void PathPlanner::computeObstaclesAmplitude() {
                 // compute a proper value for the amplitude of the Bell function
                 // obstacles in the half-plane with y < x
 //                A(o) = std::max(0.0, -minFl * min_inv);
-                A(o) = - minFl * min_inv;
+                A(o) = fabs(-minFl * min_inv);
             }
         }
     }

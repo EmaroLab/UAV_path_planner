@@ -64,7 +64,7 @@ int main (int argc, char** argv) {
     //Constant values of the velocity message
     velocityMsg.v_max_xy = 0.1;
     velocityMsg.v_max_z = 0.1;
-    velocityMsg.type = 2;
+    velocityMsg.type = asctec_hl_comm::mav_ctrl::velocity;
     velocityMsg.header.frame_id = "world";
 
     Eigen::MatrixXd command_window (3,100);
@@ -81,19 +81,19 @@ int main (int argc, char** argv) {
 
         //Filling the velocity vector message
         velocityMsg.header.stamp = ros::Time::now();
-        velocityMsg.z = velocityVector(2);
-        velocityMsg.yaw = pathPlanner->getYawCommand();
 
         for (int i = 0; i < command_window.cols()-1; i++){
-            command_window.col(i) << 0.95 * command_window.col(i+1);
+            command_window.col(i) << command_window.col(i+1);
         }
-
         command_window.col(command_window.cols()-1) << velocityVector;
 
+        velocityMsg.z = command_window.row(2).sum()/command_window.cols();
+        velocityMsg.yaw = pathPlanner->getYawCommand();
+
         //If yaw error  is too high stop moving along xy plane and wait for rotation
-        if (fabs(pathPlanner->getYawError()) < 0.3){
-            velocityMsg.x = command_window.row(0).sum()/command_window.size();
-            velocityMsg.y = command_window.row(1).sum()/command_window.size();
+        if (fabs(pathPlanner->getYawError()) < 0.6){
+            velocityMsg.x = command_window.row(0).sum()/command_window.cols();
+            velocityMsg.y = command_window.row(1).sum()/command_window.cols();
         }else{
             velocityMsg.x = 0;
             velocityMsg.y = 0;
