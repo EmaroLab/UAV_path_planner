@@ -25,6 +25,8 @@ void publishVectorialField(ros::NodeHandle &nh);
 
 int main (int argc, char** argv) {
 
+
+    //Initializing the path planner with the two surfaces which define the path
 //    Surface_function* f1 = new Cylinder(1.5,3,0,0);
     Surface_function* f1 = new Plane(1,0,0,1);
     Surface_function* f2 = new Plane (0,0,1,-0.4);
@@ -49,6 +51,8 @@ int main (int argc, char** argv) {
 
     if (publish_vectorial_field) {
         publishVectorialField(nh);
+        return(0);
+
     }
 
     //Declaring messages
@@ -66,7 +70,7 @@ int main (int argc, char** argv) {
     velocityMsg.type = asctec_hl_comm::mav_ctrl::velocity;
     velocityMsg.header.frame_id = "world";
 
-    Eigen::MatrixXd command_window (3,300);
+    Eigen::MatrixXd command_window (3,500);
 
     // Spin
     ros::Rate rate(100);
@@ -181,7 +185,7 @@ void publishVectorialField(ros::NodeHandle &nh) {
 }
 
 void getParams(ros::NodeHandle &nh) {
-    //Trajectory Planner Parameters
+    //Path Planner Parameters
     int surfToBeDef;
     int surfFlag;
     int tangFlag;
@@ -255,18 +259,6 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
         i++;
     }
     pathPlanner->setObstacleCoordinates(Xo,Yo,Zo,Sizeo);
-//    std::cout << "Xo: " << Xo << std::endl;
-//    std::cout << "Yo: " << Yo << std::endl;
-//    std::cout << "Zo: " << Zo << std::endl << std::endl;
-//
-//    Xo.conservativeResize(i);
-//    Yo.conservativeResize(i);
-//    Zo.conservativeResize(i);
-//    Sizeo.resize(i);
-//    std::cout << "Xo: " << Xo << std::endl;
-//    std::cout << "Yo: " << Yo << std::endl;
-//    std::cout << "Zo: " << Zo << std::endl << std::endl;
-
 }
 
 void octomap_cb (const octomap_msgs::Octomap map_msg) {
@@ -303,8 +295,6 @@ void octomap_cb (const octomap_msgs::Octomap map_msg) {
         return;
     }
 
-//    std::cout << "Num Leaves = " << Nobstacles << std::endl;
-//    std::cout << "Num occupied Leaves = " << numOccupiedLeaves << std::endl;
     Xo.conservativeResize(numOccupiedLeaves);
     Yo.conservativeResize(numOccupiedLeaves);
     Zo.conservativeResize(numOccupiedLeaves);

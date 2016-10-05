@@ -246,6 +246,7 @@ void PathPlanner::computeSensedObstacles() {
 //            markerArray.markers.push_back(obsMarker);
             //o_sensed(i) = (dist_sensed_obs - o_dist(i))/dist_sensed_obs;
             o_sensed(i) = pow(o_dist(i)- dist_sensed_obs,2) / pow(dist_sensed_obs,2);
+
             numSensedObs++;
         } else {
             o_sensed(i) = 0;// pow(dist_sensed_obs / o_dist(1),3);
@@ -351,6 +352,8 @@ void PathPlanner::computeIntermediateVariables() {
         o_sensed_A = Eigen::ArrayXd::Zero(1);
     }
 
+
+
     der_core = -o_sensed_A*pi_sigma*sin_f_core*o_dist_1_2_inv;
 
 //    der_core_1 = -o_sensed_A*pi_sigma_2*cos_f_core*o_dist_inv;
@@ -360,19 +363,6 @@ void PathPlanner::computeIntermediateVariables() {
 //    GAUSSIAN = o_sensed_A*(cos_f_core + 1);
     GAUSSIAN = o_sensed_A*exp(-o_dist/sigma);
 
-//    std::ofstream myfile ("example.txt");
-//    if (myfile.is_open())
-//    {
-//        //std::cout << "saving" << std::endl;
-//        int count;
-//        for(count = 0; count < GAUSSIAN.size(); count ++){
-//            myfile << GAUSSIAN[count] << " " ;
-//        }
-//        //std::cout << count << std::endl;
-//        myfile.close();
-//    }
-//    else std::cout << "Unable to open file";
-//
 //    foxGAUSSIAN = der_core*x_dist;
 //    foyGAUSSIAN = der_core*y_dist;
 //    fozGAUSSIAN = der_core*z_dist;
@@ -380,6 +370,27 @@ void PathPlanner::computeIntermediateVariables() {
     foxGAUSSIAN = -2 * o_sensed_A * x_dist/sigma * exp(-o_dist.pow(2)/sigma);
     foyGAUSSIAN = -2 * o_sensed_A * y_dist/sigma * exp(-o_dist.pow(2)/sigma);
     fozGAUSSIAN = -2 * o_sensed_A * z_dist/sigma * exp(-o_dist.pow(2)/sigma);
+
+
+//
+//    std::ostringstream filename;
+//    filename << "./debug/" << x <<"_"<< y << ".txt";
+//    std::string filenamestring;
+//    filenamestring = filename.str();
+//
+//    std::ofstream myfile (filenamestring.c_str());
+//    if (myfile.is_open())
+//    {
+//        //std::cout << "saving" << std::endl;
+//        int count;
+//        myfile << "Obstacle distance" << "\t" << "fozGaussian" << "\n";
+//        for(count = 0; count < o_sensed.size(); count ++){
+//            myfile << o_dist (count) << "\t" << fozGAUSSIAN(count) << "\n";
+//        }
+//        //std::cout << count << std::endl;
+//        myfile.close();
+//    }
+//    else std::cout << "Unable to open file";
 
 };
 
