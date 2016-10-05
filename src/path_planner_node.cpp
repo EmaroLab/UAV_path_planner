@@ -70,7 +70,7 @@ int main (int argc, char** argv) {
     velocityMsg.type = asctec_hl_comm::mav_ctrl::velocity;
     velocityMsg.header.frame_id = "world";
 
-    Eigen::MatrixXd command_window (3,500);
+    Eigen::MatrixXd command_window (3,400);
 
     // Spin
     ros::Rate rate(100);
@@ -89,26 +89,19 @@ int main (int argc, char** argv) {
             command_window.col(i) << command_window.col(i+1);
         }
         command_window.col(command_window.cols()-1) << velocityVector;
-
+        velocityMsg.x = command_window.row(0).sum()/command_window.cols();
+        velocityMsg.y = command_window.row(1).sum()/command_window.cols();
         velocityMsg.z = command_window.row(2).sum()/command_window.cols();
         velocityMsg.yaw = pathPlanner->getYawCommand();
 
-        //If yaw error  is too high stop moving along xy plane and wait for rotation
-        if (fabs(pathPlanner->getYawError()) < 1){
-            velocityMsg.x = command_window.row(0).sum()/command_window.cols();
-            velocityMsg.y = command_window.row(1).sum()/command_window.cols();
-        }else{
-            velocityMsg.x = 0;
-            velocityMsg.y = 0;
-        }
 
         //Topic to visualize the velocity vector in Rviz
         visualization_vector.header.frame_id = "world";
         visualization_vector.points.clear();
         visualization_vector.points.push_back(robotPose.pose.position);
-        vectorTip.x = robotPose.pose.position.x + velocityVector(0)*5;
-        vectorTip.y = robotPose.pose.position.y + velocityVector(1)*5;
-        vectorTip.z = robotPose.pose.position.z + velocityVector(2)*5;
+        vectorTip.x = robotPose.pose.position.x + velocityMsg.x*5;
+        vectorTip.y = robotPose.pose.position.y + velocityMsg.y*5;
+        vectorTip.z = robotPose.pose.position.z + velocityMsg.z*5;
         visualization_vector.points.push_back(vectorTip);
         visualization_vector.scale.x = 0.03;
         visualization_vector.scale.y = 0.06;
@@ -116,6 +109,12 @@ int main (int argc, char** argv) {
         visualization_vector.color.a = 1;
         visualization_vector.color.r = 1;
 
+        //If yaw error  is too high stop moving along xy plane and wait for rotation
+        if (fabs(pathPlanner->getYawError()) > 1){
+            velocityMsg.x = 0;
+            velocityMsg.y = 0;
+        }
+        
         //Publishing
         markerPub.publish(visualization_vector);
 //        markerArrayPub.publish(pathPlanner->markerArray);
@@ -157,9 +156,9 @@ void publishVectorialField(ros::NodeHandle &nh) {
             point.y = y;
             point.z = 0.4;
             visualization_vector.points.push_back(point);
-            vectorTip.x = x + velocityVector(0);
-            vectorTip.y = y + velocityVector(1);
-            vectorTip.z = 0.4 + velocityVector(2);
+            vectorTip.x = x + velocityVector(0)*2;
+            vectorTip.y = y + velocityVector(1)*2;
+            vectorTip.z = 0.4 + velocityVector(2)*2;
             visualization_vector.points.push_back(vectorTip);
             visualization_vector.scale.x = 0.01;
             visualization_vector.scale.y = 0.02;
@@ -305,11 +304,11 @@ void octomap_cb (const octomap_msgs::Octomap map_msg) {
 void pose_cb (const geometry_msgs::PoseStamped pose_msg) {
     pathPlanner->setRobotPose(pose_msg);
     if (pose_msg.pose.position.y < -1.5){
-        pathPlanner->setTangFlag(1);
+        pathPlanner->setTangFlag(-1);
         //pathPlanner->setSurfFlag(1);
     }
     if (pose_msg.pose.position.y > 1.2){
-        pathPlanner->setTangFlag(-1);
+        pathPlanner->setTangFlag(1);
         //pathPlanner->setSurfFlag(-1);
     }
 
