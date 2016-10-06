@@ -28,7 +28,7 @@ int main (int argc, char** argv) {
 
     //Initializing the path planner with the two surfaces which define the path
 //    Surface_function* f1 = new Cylinder(1.5,3,0,0);
-    Surface_function* f1 = new Plane(1,0,0,1);
+    Surface_function* f1 = new Plane(1,0,0,0);
     Surface_function* f2 = new Plane (0,0,1,-0.4);
     pathPlanner = new PathPlanner(f1,f2);
 
@@ -99,9 +99,9 @@ int main (int argc, char** argv) {
         visualization_vector.header.frame_id = "world";
         visualization_vector.points.clear();
         visualization_vector.points.push_back(robotPose.pose.position);
-        vectorTip.x = robotPose.pose.position.x + velocityMsg.x*5;
-        vectorTip.y = robotPose.pose.position.y + velocityMsg.y*5;
-        vectorTip.z = robotPose.pose.position.z + velocityMsg.z*5;
+        vectorTip.x = robotPose.pose.position.x + velocityMsg.x*7;
+        vectorTip.y = robotPose.pose.position.y + velocityMsg.y*7;
+        vectorTip.z = robotPose.pose.position.z + velocityMsg.z*7;
         visualization_vector.points.push_back(vectorTip);
         visualization_vector.scale.x = 0.03;
         visualization_vector.scale.y = 0.06;
@@ -304,11 +304,11 @@ void octomap_cb (const octomap_msgs::Octomap map_msg) {
 void pose_cb (const geometry_msgs::PoseStamped pose_msg) {
     pathPlanner->setRobotPose(pose_msg);
     if (pose_msg.pose.position.y < -1.5){
-        pathPlanner->setTangFlag(-1);
+        pathPlanner->setTangFlag(1);
         //pathPlanner->setSurfFlag(1);
     }
     if (pose_msg.pose.position.y > 1.2){
-        pathPlanner->setTangFlag(1);
+        pathPlanner->setTangFlag(-1);
         //pathPlanner->setSurfFlag(-1);
     }
 
