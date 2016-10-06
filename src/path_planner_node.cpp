@@ -70,12 +70,15 @@ int main (int argc, char** argv) {
     velocityMsg.type = asctec_hl_comm::mav_ctrl::velocity;
     velocityMsg.header.frame_id = "world";
 
-    Eigen::MatrixXd command_window (3,400);
+//    Eigen::MatrixXd command_window (4,400);
+
+    std::vector<asctec_hl_comm::mav_ctrl> command_window(1);
 
     // Spin
     ros::Rate rate(100);
 
     while (ros::ok()){
+
 
         //Running the path planner
         pathPlanner->run();
@@ -85,15 +88,41 @@ int main (int argc, char** argv) {
         //Filling the velocity vector message
         velocityMsg.header.stamp = ros::Time::now();
 
-        for (int i = 0; i < command_window.cols()-1; i++){
-            command_window.col(i) << command_window.col(i+1);
+        double xSum = 0;
+        double ySum = 0;
+        double zSum = 0;
+        int i = command_window.size() -1;
+        while (ros::Time::now() - command_window[i].header.stamp > ros::Duration(3.0) && i > 0){
+            i--;
         }
-        command_window.col(command_window.cols()-1) << velocityVector;
-        velocityMsg.x = command_window.row(0).sum()/command_window.cols();
-        velocityMsg.y = command_window.row(1).sum()/command_window.cols();
-        velocityMsg.z = command_window.row(2).sum()/command_window.cols();
-        velocityMsg.yaw = pathPlanner->getYawCommand();
 
+        command_window.resize(i+2);
+        for (i++; i > 0; i--){
+            command_window[i] = command_window[i-1];
+            xSum += command_window[i].x;
+            ySum += command_window[i].y;
+            zSum += command_window[i].z;
+        }
+
+        command_window[0].x = velocityVector(0);
+        command_window[0].y = velocityVector(1);
+        command_window[0].z = velocityVector(2);
+        command_window[0].header.stamp = ros::Time::now();
+
+        xSum += velocityVector(0);
+        ySum += velocityVector(1);
+        zSum += velocityVector(2);
+
+        velocityMsg.x = xSum / command_window.size();
+        velocityMsg.y = ySum / command_window.size();
+        velocityMsg.z = zSum / command_window.size();
+
+//        command_window.col(command_window.cols()-1) << velocityVector;
+//        velocityMsg.x = command_window.row(0).sum()/command_window.cols();
+//        velocityMsg.y = command_window.row(1).sum()/command_window.cols();
+//        velocityMsg.z = command_window.row(2).sum()/command_window.cols();
+
+        velocityMsg.yaw = pathPlanner->getYawCommand();
 
         //Topic to visualize the velocity vector in Rviz
         visualization_vector.header.frame_id = "world";
