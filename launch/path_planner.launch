@@ -1,11 +1,13 @@
 <launch>
-	<arg name="record_trajectory" default="true" />
+
+	<arg name="record_trajectory" default="false" />	
+	<arg name="publish_vector_field" default="false" />
 	
 	<node pkg="path_planner" type="path_planner_node" name="path_planner_node" output="screen">
 		<param name="frame_id" type="string" value="world" />
-		<param name="surfFlag" type="int" value="1" />
+		<param name="surfFlag" type="int" value="-1" />
 		<param name="surfToBeDef" type="int" value="1" />
-		<param name="tangFlag" type="int" value="1" />
+		<param name="tangFlag" type="int" value="-1" />
 		<param name="run_time" type="bool" value="true" />
 		<param name="sigma_multiplier" type="double" value="15" />
 		<param name="xyGain" type="double" value="0.05" />
@@ -16,7 +18,7 @@
 		<param name="dist_sensed_obs" type="double" value="0.8" />
 		<param name="pcRaise" type="double" value="0.0" />
 		<param name="safety_margin" type="double" value="0.4" />
-		<param name="publish_vectorial_field" type="bool" value="false"/>
+		<param name="publish_vector_field" type="bool" value="$(arg publish_vector_field)"/>
 
 		<remap from="map_in" to="octomap_full" />
 		<remap from="pose_in" to="Robot_1/pose"/>

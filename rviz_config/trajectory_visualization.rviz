@@ -150,7 +150,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: false
-      Marker Topic: /vectorial_field
+      Marker Topic: /vector_field
       Name: Vector field
       Namespaces:
         {}

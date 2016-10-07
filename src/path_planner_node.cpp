@@ -10,7 +10,7 @@
 
 PathPlanner* pathPlanner;
 double pcRaise;
-bool publish_vectorial_field;
+bool publish_vector_field;
 
 
 void getParams(ros::NodeHandle &nh);
@@ -21,7 +21,7 @@ void octomap_cb (const octomap_msgs::Octomap map_msg);
 
 void pose_cb (const geometry_msgs::PoseStamped pose_msg);
 
-void publishVectorialField(ros::NodeHandle &nh);
+void publishVectorField(ros::NodeHandle &nh);
 
 int main (int argc, char** argv) {
 
@@ -49,8 +49,8 @@ int main (int argc, char** argv) {
 
     getParams(nh);
 
-    if (publish_vectorial_field) {
-        publishVectorialField(nh);
+    if (publish_vector_field) {
+        publishVectorField(nh);
         return(0);
 
     }
@@ -154,12 +154,12 @@ int main (int argc, char** argv) {
     }
 }
 
-void publishVectorialField(ros::NodeHandle &nh) {
+void publishVectorField(ros::NodeHandle &nh) {
 
-    ros::Publisher vectorialFieldPub = nh.advertise<visualization_msgs::MarkerArray>("/vectorial_field",1,true);
+    ros::Publisher vectorFieldPub = nh.advertise<visualization_msgs::MarkerArray>("/vector_field",1,true);
 
     Eigen::Vector3d velocityVector;
-    visualization_msgs::MarkerArray vectorial_field;
+    visualization_msgs::MarkerArray vector_field;
 
     visualization_msgs::Marker visualization_vector;
     geometry_msgs::Point vectorTip;
@@ -168,7 +168,7 @@ void publishVectorialField(ros::NodeHandle &nh) {
     ROS_INFO("Waiting for map message to be published");
     ros::topic::waitForMessage<octomap_msgs::Octomap>("/map_in", nh);
     ros::spinOnce();
-    ROS_INFO("Map received. Plotting vectorial field");
+    ROS_INFO("Map received. Plotting vector field");
     double step = 0.15;
     int id = 0;
     for (double x = -2; x < 2; x += step){
@@ -194,22 +194,22 @@ void publishVectorialField(ros::NodeHandle &nh) {
             visualization_vector.scale.z = 0.04;
             visualization_vector.color.a = 1;
             visualization_vector.color.r = 1;
-            vectorial_field.markers.push_back(visualization_vector);
+            vector_field.markers.push_back(visualization_vector);
             id ++;
         }
     }
 
-    while (vectorialFieldPub.getNumSubscribers() == 0){
-        ROS_INFO("Waiting for subscribers to receive the vectorial field message");
+    while (vectorFieldPub.getNumSubscribers() == 0){
+        ROS_INFO("Waiting for subscribers to receive the vector field message");
         sleep(1);
     }
 
     //I have to publish several times for a remote machine to receive the message.
     //TODO Find a better solution
     for (int i = 0; i < 1000; i ++){
-        vectorialFieldPub.publish(vectorial_field);
+        vectorFieldPub.publish(vector_field);
     }
-    ROS_INFO("Vectorial field published");
+    ROS_INFO("Vector field published");
 }
 
 void getParams(ros::NodeHandle &nh) {
@@ -259,7 +259,7 @@ void getParams(ros::NodeHandle &nh) {
     //Parameter to raise the point cloud along z. Used to avoid crashes at testing time.
     // Set to 0 for real implementation
     nh.param("pcRaise",pcRaise,0.0);
-    nh.param("publish_vectorial_field", publish_vectorial_field, false);
+    nh.param("publish_vector_field", publish_vector_field, false);
 }
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
