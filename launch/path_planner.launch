@@ -1,4 +1,6 @@
 <launch>
+	<arg name="record_trajectory" default="true" />
+	
 	<node pkg="path_planner" type="path_planner_node" name="path_planner_node" output="screen">
 		<param name="frame_id" type="string" value="world" />
 		<param name="surfFlag" type="int" value="1" />
@@ -24,6 +26,9 @@
 	<node pkg="hector_trajectory_server" type="hector_trajectory_server" name="hector_trajectory_server" output="screen">
 		<param name="target_frame_name" type="string" value="world" />
 		<param name="source_frame_name" type="string" value="Robot_1/base_link" />
-		
 	</node>
+
+	<node pkg="rosbag" type="record" name="rosbag_record_trajectory"
+	       args="-o $(find path_planner)/bags/trajectories/trajectory /octomap_full /occupied_cells_vis_array /path_planner_node/velocity_vector_marker /trajectory /tf"
+	       if="$(arg record_trajectory)" />
 </launch>
