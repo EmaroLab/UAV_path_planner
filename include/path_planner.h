@@ -59,13 +59,15 @@ public:
 
     void setKtang(double Ktang);
 
+    void setDesiredYaw(double desired_yaw);
+
     void run();
 
     Eigen::Vector3d getVelocityVector();
 
     geometry_msgs::PoseStamped getRobotPose();
 
-    double getYawCommand();
+    double computeYawCommand();
 
     double getYawError();
 
@@ -156,7 +158,7 @@ private:
 
     //Output velocity vector and yaw command
     Eigen::Vector3d velocityVector;
-    double yaw_command;
+    double desiredYaw;
 
     //Yaw errors at instants t, t-1 and t-2 and integral for PID
     double yaw_err;

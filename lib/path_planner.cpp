@@ -141,6 +141,10 @@ void PathPlanner::setTangFlag (int tangFlag){
     }
 };
 
+void PathPlanner::setDesiredYaw(double desired_yaw){
+    this->desiredYaw = desired_yaw;
+}
+
 void PathPlanner::setSigmaMultiplier (double sigma_multiplier){
     this->sigma_multiplier = sigma_multiplier;
 };
@@ -171,10 +175,6 @@ void PathPlanner::setKtang(double Ktang){
 
 Eigen::Vector3d PathPlanner::getVelocityVector() {
     return velocityVector;
-};
-
-double PathPlanner::getYawCommand(){
-    return yaw_command;
 };
 
 double PathPlanner::getYawError() {
@@ -452,7 +452,9 @@ void PathPlanner::computeVelocityVector() {
     velocityVector(1) *= xyGain;
     velocityVector(2) *= zGain;
 
-    double desiredYaw = atan2(velocityVector(1),velocityVector(0));
+}
+
+double PathPlanner::computeYawCommand() {
     double actualYaw = tf::getYaw(robotPose.pose.orientation);
 
     //Update previous errors
@@ -465,7 +467,7 @@ void PathPlanner::computeVelocityVector() {
     if (yaw_err > M_PI) {
         yaw_err -= 2 * M_PI;
     } else if (yaw_err < -M_PI){
-        yaw_err +=  2 * M_PI;
+        yaw_err += 2 * M_PI;
     }
 
     // three-point derivative (Lagrange Approach) f'(x) = ( f(x-2h) - 4f(x-h) + 3f(x) ) / 2h
@@ -474,8 +476,8 @@ void PathPlanner::computeVelocityVector() {
     if (!isnan(yaw_err)) {
         yaw_err_i += yaw_err * I_yaw;
     }
-    yaw_command = P_yaw * yaw_err + D_yaw * yaw_err_d + yaw_err_i;
-
+    double yaw_command =  P_yaw * yaw_err + D_yaw * yaw_err_d + yaw_err_i;
+    return yaw_command;
 };
 
 void PathPlanner::run(){
