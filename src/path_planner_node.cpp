@@ -28,8 +28,8 @@ int main (int argc, char** argv) {
     //TODO find a way to pass the surfaces via argument or launch
     //Initializing the path planner with the two surfaces which define the path
 //    Surface_function* f1 = new Cylinder(1,1,0,0.3,20);
-    Surface_function* f1 = new Plane(1,0,0,0,4);
-    Surface_function* f2 = new Plane (0,0,1,-0.4,4);
+    Surface_function* f1 = new Plane(1,0,0,0,3);
+    Surface_function* f2 = new Plane (0,0,1,-0.4,3);
     pathPlanner = new PathPlanner(f1,f2);
 
     // Initialize ROS
