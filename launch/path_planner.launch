@@ -6,8 +6,8 @@
 	<node pkg="path_planner" type="path_planner_node" name="path_planner_node" output="screen">
 		<param name="frame_id" type="string" value="world" />
 		<param name="surfFlag" type="int" value="-1" />
-		<param name="surfToBeDef" type="int" value="2" />
-		<param name="tangFlag" type="int" value="-1" />
+		<param name="surfToBeDef" type="int" value="1" />
+		<param name="tangFlag" type="int" value="1" />
 		<param name="sigma_multiplier" type="double" value="15" />
 		<param name="xyGain" type="double" value="0.07" />
 		<param name="zGain" type="double" value="0.1" />

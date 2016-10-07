@@ -27,8 +27,8 @@ int main (int argc, char** argv) {
 
     //TODO find a way to pass the surfaces via argument or launch
     //Initializing the path planner with the two surfaces which define the path
-//    Surface_function* f1 = new Cylinder(1,1,0,0.3,20);
-    Surface_function* f1 = new Plane(1,0,0,0,3);
+    Surface_function* f1 = new Cylinder(1.5,1.5,1.5,0,20);
+//    Surface_function* f1 = new Plane(1,0,0,0,3);
     Surface_function* f2 = new Plane (0,0,1,-0.4,3);
     pathPlanner = new PathPlanner(f1,f2);
 
@@ -121,7 +121,6 @@ int main (int argc, char** argv) {
         velocityMsg.z = zSum / command_window.size();
 
         pathPlanner->setDesiredYaw(atan2(velocityMsg.y,velocityMsg.x));
-
         velocityMsg.yaw = pathPlanner->computeYawCommand();
 
         //Topic to visualize the velocity vector in Rviz
@@ -330,13 +329,13 @@ void octomap_cb (const octomap_msgs::Octomap map_msg) {
 
 void pose_cb (const geometry_msgs::PoseStamped pose_msg) {
     pathPlanner->setRobotPose(pose_msg);
-    if (pose_msg.pose.position.y < -1.5){
-        pathPlanner->setTangFlag(1);
-        //pathPlanner->setSurfFlag(1);
-    }
-    if (pose_msg.pose.position.y > 1.2){
-        pathPlanner->setTangFlag(-1);
-        //pathPlanner->setSurfFlag(-1);
-    }
+//    if (pose_msg.pose.position.y < -1.5){
+//        pathPlanner->setTangFlag(1);
+//        //pathPlanner->setSurfFlag(1);
+//    }
+//    if (pose_msg.pose.position.y > 1.2){
+//        pathPlanner->setTangFlag(-1);
+//        //pathPlanner->setSurfFlag(-1);
+//    }
 
 }
