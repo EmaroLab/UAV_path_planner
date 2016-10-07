@@ -9,7 +9,7 @@
 
 class Cylinder: public Surface_function{
 public:
-    Cylinder(double a, double b, double x0, double y0);
+    Cylinder(double a, double b, double x0, double y0, double steepness);
     double computeFunctionValue(double x, double y, double z);
     Eigen::Vector3d computeGradientValue(double x, double y, double z);
 private:
@@ -17,6 +17,7 @@ private:
     double b;
     double x0;
     double y0;
+    double steepness;
 };
 
 #endif //PATH_PLANNER_CYLINDER_H

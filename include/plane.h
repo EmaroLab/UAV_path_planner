@@ -9,7 +9,7 @@
 
 class Plane: public Surface_function{
     public:
-        Plane(double a, double b, double c, double d);
+        Plane(double a, double b, double c, double d,double steepness);
         double computeFunctionValue(double x,double y,double z);
         Eigen::Vector3d computeGradientValue(double x, double y, double z);
     private:
@@ -17,6 +17,7 @@ class Plane: public Surface_function{
         double b;
         double c;
         double d;
+        double steepness;
 };
 
 
