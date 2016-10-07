@@ -25,11 +25,11 @@ void publishVectorField(ros::NodeHandle &nh);
 
 int main (int argc, char** argv) {
 
-
+    //TODO find a way to pass the surfaces via argument or launch
     //Initializing the path planner with the two surfaces which define the path
-    Surface_function* f1 = new Cylinder(1,1,0,0);
-//    Surface_function* f1 = new Plane(1,0,0,0);
-    Surface_function* f2 = new Plane (0,0,1,-0.4);
+//    Surface_function* f1 = new Cylinder(1,1,0,0);
+    Surface_function* f1 = new Plane(20,0,0,0);
+    Surface_function* f2 = new Plane (0,0,20,-8);
     pathPlanner = new PathPlanner(f1,f2);
 
     // Initialize ROS
@@ -45,14 +45,12 @@ int main (int argc, char** argv) {
     ros::Publisher pub = nh.advertise<asctec_hl_comm::mav_ctrl>("/command_out",1);
     ros::Publisher markerPub = nh.advertise<visualization_msgs::Marker>("velocity_vector_marker",1);
 //  ros::Publisher markerArrayPub = nh.advertise<visualization_msgs::MarkerArray>("/octomap_vis",1);
-    //ros::Publisher pathPublisher = nh.advertise<nav_msgs::Path>("/path",1,true);
 
     getParams(nh);
 
     if (publish_vector_field) {
         publishVectorField(nh);
         return(0);
-
     }
 
     //Declaring messages
@@ -65,12 +63,8 @@ int main (int argc, char** argv) {
     geometry_msgs::Point vectorTip;
 
     //Constant values of the velocity message
-    velocityMsg.v_max_xy = 0.1;
-    velocityMsg.v_max_z = 0.1;
     velocityMsg.type = asctec_hl_comm::mav_ctrl::velocity;
     velocityMsg.header.frame_id = "world";
-
-//    Eigen::MatrixXd command_window (4,400);
 
     std::vector<asctec_hl_comm::mav_ctrl> command_window(1);
 
@@ -88,15 +82,22 @@ int main (int argc, char** argv) {
         //Filling the velocity vector message
         velocityMsg.header.stamp = ros::Time::now();
 
+        //LowPass filter via sliding window. The final command is an average of the commands
+        //sent over the last few seconds (tunable)
         double xSum = 0;
         double ySum = 0;
         double zSum = 0;
+
+        //Check obsolete messages. At the end of this loop i is the index of the oldest considered message
         int i = command_window.size() -1;
         while (ros::Time::now() - command_window[i].header.stamp > ros::Duration(3.0) && i > 0){
             i--;
         }
 
+        //Truncate the vector in order to keep non-obsolete message plus one slot for the incoming message
         command_window.resize(i+2);
+
+        //Perfom the sliding and sum up for average
         for (i++; i > 0; i--){
             command_window[i] = command_window[i-1];
             xSum += command_window[i].x;
@@ -104,6 +105,7 @@ int main (int argc, char** argv) {
             zSum += command_window[i].z;
         }
 
+        //Add incoming message to the window and add its contibution
         command_window[0].x = velocityVector(0);
         command_window[0].y = velocityVector(1);
         command_window[0].z = velocityVector(2);
@@ -113,14 +115,10 @@ int main (int argc, char** argv) {
         ySum += velocityVector(1);
         zSum += velocityVector(2);
 
+        //Output message as average of the messages in the window
         velocityMsg.x = xSum / command_window.size();
         velocityMsg.y = ySum / command_window.size();
         velocityMsg.z = zSum / command_window.size();
-
-//        command_window.col(command_window.cols()-1) << velocityVector;
-//        velocityMsg.x = command_window.row(0).sum()/command_window.cols();
-//        velocityMsg.y = command_window.row(1).sum()/command_window.cols();
-//        velocityMsg.z = command_window.row(2).sum()/command_window.cols();
 
         velocityMsg.yaw = pathPlanner->getYawCommand();
 
@@ -160,17 +158,18 @@ void publishVectorField(ros::NodeHandle &nh) {
 
     Eigen::Vector3d velocityVector;
     visualization_msgs::MarkerArray vector_field;
-
     visualization_msgs::Marker visualization_vector;
     geometry_msgs::Point vectorTip;
-    nav_msgs::Path path;
-    path.header.frame_id = "world";
+
     ROS_INFO("Waiting for map message to be published");
     ros::topic::waitForMessage<octomap_msgs::Octomap>("/map_in", nh);
     ros::spinOnce();
+
     ROS_INFO("Map received. Plotting vector field");
     double step = 0.15;
     int id = 0;
+
+    //TODO vector field is now visualized at a fixed height. Make it more flexible
     for (double x = -2; x < 2; x += step){
         for (double y = -2.5; y < 2.5; y+= step){
             pathPlanner->setRobotPose(x, y, 0.4, tf::Quaternion(0, 0, 0, 1));
@@ -178,16 +177,16 @@ void publishVectorField(ros::NodeHandle &nh) {
             velocityVector = pathPlanner->getVelocityVector();
             visualization_vector.header.frame_id = "world";
             visualization_vector.id = id;
-            visualization_vector.type= visualization_msgs::Marker::ARROW;
+            visualization_vector.type = visualization_msgs::Marker::ARROW;
             visualization_vector.points.clear();
             geometry_msgs::Point point;
             point.x = x;
             point.y = y;
             point.z = 0.4;
             visualization_vector.points.push_back(point);
-            vectorTip.x = x + velocityVector(0)*2;
-            vectorTip.y = y + velocityVector(1)*2;
-            vectorTip.z = 0.4 + velocityVector(2)*2;
+            vectorTip.x = x + velocityVector(0);
+            vectorTip.y = y + velocityVector(1);
+            vectorTip.z = 0.4 + velocityVector(2);
             visualization_vector.points.push_back(vectorTip);
             visualization_vector.scale.x = 0.01;
             visualization_vector.scale.y = 0.02;
@@ -195,7 +194,7 @@ void publishVectorField(ros::NodeHandle &nh) {
             visualization_vector.color.a = 1;
             visualization_vector.color.r = 1;
             vector_field.markers.push_back(visualization_vector);
-            id ++;
+            id++;
         }
     }
 
@@ -217,7 +216,6 @@ void getParams(ros::NodeHandle &nh) {
     int surfToBeDef;
     int surfFlag;
     int tangFlag;
-    bool run_time;
     std::string frame_id;
     double sigma_multiplier;
     double xyGain;
@@ -231,7 +229,6 @@ void getParams(ros::NodeHandle &nh) {
     nh.param("surfFlag", surfFlag,1);
     nh.param("surfToBeDef", surfToBeDef,1);
     nh.param("tangFlag",tangFlag,1);
-    nh.param("run_time",run_time,true);
     nh.param<std::string>("frame_id",frame_id, "world");
     nh.param("sigma_multiplier",sigma_multiplier,11.0);
     nh.param("xyGain",xyGain,0.1);
@@ -246,7 +243,6 @@ void getParams(ros::NodeHandle &nh) {
     pathPlanner->setSurfFlag(surfFlag);
     pathPlanner->setSurfToBeDef(surfToBeDef);
     pathPlanner->setTangFlag(tangFlag);
-    pathPlanner->setRunTime(run_time);
     pathPlanner->setSigmaMultiplier(sigma_multiplier);
     pathPlanner->setXYGain(xyGain);
     pathPlanner->setZGain(zGain);

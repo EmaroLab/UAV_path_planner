@@ -37,8 +37,6 @@ public:
 
     void setTangFlag(int tangFlag);
 
-    void setRunTime(bool run_time);
-
     void setSigmaMultiplier(double sigma_multiplier);
 
     void setFrameId(std::string frame_id);
@@ -70,12 +68,6 @@ public:
     double getYawCommand();
 
     double getYawError();
-
-    double getf1val();
-
-    double getf2val();
-
-//    visualization_msgs::MarkerArray markerArray;
 
 private:
 
@@ -142,21 +134,21 @@ private:
     int numSensedObs;
 
     //Intermediate variables introduce to simplify computation
-    Eigen::ArrayXd o_dist_inv;
-    Eigen::ArrayXd o_dist_1_2;
-    Eigen::ArrayXd o_dist_1_2_inv;
-    Eigen::ArrayXd f_core;
-    Eigen::ArrayXd cos_f_core;
-    Eigen::ArrayXd sin_f_core;
+//    Eigen::ArrayXd o_dist_inv;
+//    Eigen::ArrayXd o_dist_1_2;
+//    Eigen::ArrayXd o_dist_1_2_inv;
+//    Eigen::ArrayXd f_core;
+//    Eigen::ArrayXd cos_f_core;
+//    Eigen::ArrayXd sin_f_core;
     Eigen::ArrayXd o_sensed_A;
-    Eigen::ArrayXd der_core;
+//    Eigen::ArrayXd der_core;
     Eigen::ArrayXd GAUSSIAN;
     Eigen::ArrayXd foxGAUSSIAN;
     Eigen::ArrayXd foyGAUSSIAN;
     Eigen::ArrayXd fozGAUSSIAN;
-    Eigen::ArrayXd sigma_1_2;
-    Eigen::ArrayXd pi_sigma;
-    Eigen::ArrayXd pi_sigma_2;
+//    Eigen::ArrayXd sigma_1_2;
+//    Eigen::ArrayXd pi_sigma;
+//    Eigen::ArrayXd pi_sigma_2;
 
     //Obstacle contributions and gradient
     double fo;
@@ -190,7 +182,6 @@ private:
     double I_yaw;
     double D_yaw;
 
-    bool run_time;
     bool hasObstacles;
     int surfFlag;     //determines the surface f1 or f2=-f1 to be used to define the path
     int tangFlag; // determines the direction along which the robot follows the path

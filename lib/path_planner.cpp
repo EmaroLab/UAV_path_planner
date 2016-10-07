@@ -11,7 +11,6 @@ PathPlanner::PathPlanner(Surface_function* f1, Surface_function* f2) {
 
 void PathPlanner::setDefaultParameters() {
     hasObstacles = false;
-    run_time = true;
     surfToBeDef = 1;
     surfFlag = 1;
     tangFlag = -1;
@@ -72,19 +71,19 @@ void PathPlanner::setObstacleCoordinates(Eigen::VectorXd Xo,Eigen::VectorXd Yo,E
     o_sensed.resize(Nobstacles);
     o_sensed_A.resize(Nobstacles);
     o_dist.resize(Nobstacles);
-    o_dist_1_2.resize(Nobstacles);
-    o_dist_1_2_inv.resize(Nobstacles);
-    o_dist_inv.resize(Nobstacles);
+//    o_dist_1_2.resize(Nobstacles);
+//    o_dist_1_2_inv.resize(Nobstacles);
+//    o_dist_inv.resize(Nobstacles);
     x_dist.resize(Nobstacles);
     y_dist.resize(Nobstacles);
     z_dist.resize(Nobstacles);
     x_dist_2.resize(Nobstacles);
     y_dist_2.resize(Nobstacles);
     z_dist_2.resize(Nobstacles);
-    f_core.resize(Nobstacles);
-    cos_f_core.resize(Nobstacles);
-    sin_f_core.resize(Nobstacles);
-    der_core.resize(Nobstacles);
+//    f_core.resize(Nobstacles);
+//    cos_f_core.resize(Nobstacles);
+//    sin_f_core.resize(Nobstacles);
+//    der_core.resize(Nobstacles);
     GAUSSIAN.resize(Nobstacles);
     foxGAUSSIAN.resize(Nobstacles);
     foyGAUSSIAN.resize(Nobstacles);
@@ -93,9 +92,9 @@ void PathPlanner::setObstacleCoordinates(Eigen::VectorXd Xo,Eigen::VectorXd Yo,E
     A1.resize(Nobstacles);
     A2.resize(Nobstacles);
     sigma.resize(Nobstacles);
-    sigma_1_2.resize(Nobstacles);
-    pi_sigma.resize(Nobstacles);
-    pi_sigma_2.resize(Nobstacles);
+//    sigma_1_2.resize(Nobstacles);
+//    pi_sigma.resize(Nobstacles);
+//    pi_sigma_2.resize(Nobstacles);
 
 };
 
@@ -142,10 +141,6 @@ void PathPlanner::setTangFlag (int tangFlag){
     }
 };
 
-void PathPlanner::setRunTime (bool run_time){
-    this->run_time = run_time;
-};
-
 void PathPlanner::setSigmaMultiplier (double sigma_multiplier){
     this->sigma_multiplier = sigma_multiplier;
 };
@@ -189,14 +184,6 @@ double PathPlanner::getYawError() {
 geometry_msgs::PoseStamped PathPlanner::getRobotPose() {
     return robotPose;
 };
-
-double PathPlanner::getf1val(){
-    return f1val;
-}
-
-double PathPlanner::getf2val(){
-    return f2val;
-}
 
 void PathPlanner::computeObstaclesDistances (){
     double x = robotPose.pose.position.x;
@@ -330,49 +317,32 @@ void PathPlanner::computeObstaclesAmplitude() {
             }
         }
     }
-
-
 };
 
 void PathPlanner::computeIntermediateVariables() {
     // these variables are introduced to simplify computations later
-    sigma_1_2 = sigma.sqrt();
-    o_dist_inv = o_dist.pow(-1);
-    o_dist_1_2 = o_dist.sqrt();
-    o_dist_1_2_inv = o_dist_1_2.pow(-1);
-    pi_sigma = M_PI / sigma_1_2;
-    pi_sigma_2 = pi_sigma.pow(2);
-    f_core = o_dist_1_2 * pi_sigma;
-    cos_f_core = f_core.cos();
-    sin_f_core = f_core.sin();
-    if ( o_sensed.size() > 0)
-    {
-        o_sensed_A = o_sensed*A.array();
-    }else{
-        o_sensed_A = Eigen::ArrayXd::Zero(1);
-    }
+//    sigma_1_2 = sigma.sqrt();
+//    o_dist_inv = o_dist.pow(-1);
+//    o_dist_1_2 = o_dist.sqrt();
+//    o_dist_1_2_inv = o_dist_1_2.pow(-1);
+//    pi_sigma = M_PI / sigma_1_2;
+//    pi_sigma_2 = pi_sigma.pow(2);
+//    f_core = o_dist_1_2 * pi_sigma;
+//    cos_f_core = f_core.cos();
+//    sin_f_core = f_core.sin();
 
-
-
-    der_core = -o_sensed_A*pi_sigma*sin_f_core*o_dist_1_2_inv;
+//    der_core = -o_sensed_A*pi_sigma*sin_f_core*o_dist_1_2_inv;
 
 //    der_core_1 = -o_sensed_A*pi_sigma_2*cos_f_core*o_dist_inv;
 //    der_core_2 << der_core;
 //    der_core_3 = o_sensed_A*pi_sigma*o_dist_inv*o_dist_1_2_inv;
 
 //    GAUSSIAN = o_sensed_A*(cos_f_core + 1);
-    GAUSSIAN = o_sensed_A*exp(-o_dist/sigma);
 
 //    foxGAUSSIAN = der_core*x_dist;
 //    foyGAUSSIAN = der_core*y_dist;
 //    fozGAUSSIAN = der_core*z_dist;
 
-    foxGAUSSIAN = -2 * o_sensed_A * x_dist/sigma * exp(-o_dist.pow(2)/sigma);
-    foyGAUSSIAN = -2 * o_sensed_A * y_dist/sigma * exp(-o_dist.pow(2)/sigma);
-    fozGAUSSIAN = -2 * o_sensed_A * z_dist/sigma * exp(-o_dist.pow(2)/sigma);
-
-
-//
 //    std::ostringstream filename;
 //    filename << "./debug/" << x <<"_"<< y << ".txt";
 //    std::string filenamestring;
@@ -395,14 +365,21 @@ void PathPlanner::computeIntermediateVariables() {
 };
 
 void PathPlanner::computeObstaclesContribution(){
+    if ( o_sensed.size() > 0)
+    {
+        o_sensed_A = o_sensed*A.array();
+    }else{
+        o_sensed_A = Eigen::ArrayXd::Zero(1);
+    }
+
+    GAUSSIAN = o_sensed_A*exp(-o_dist/sigma);
+
+    foxGAUSSIAN = -2 * o_sensed_A * x_dist/sigma * exp(-o_dist.pow(2)/sigma);
+    foyGAUSSIAN = -2 * o_sensed_A * y_dist/sigma * exp(-o_dist.pow(2)/sigma);
+    fozGAUSSIAN = -2 * o_sensed_A * z_dist/sigma * exp(-o_dist.pow(2)/sigma);
+
     fo = GAUSSIAN.sum();
     foGrad << foxGAUSSIAN.sum(),foyGAUSSIAN.sum(),fozGAUSSIAN.sum();
-    if (foGrad.norm() != 0) {
-        foGrad.normalize();
-    }
-    //std::cout << "fo = " << fo << std::endl;
-    //std::cout << "foGrad = " << foGrad << std::endl;
-
 };
 
 void PathPlanner::computeVelocityVector() {
@@ -422,7 +399,6 @@ void PathPlanner::computeVelocityVector() {
 
     //sum obstacle contribution to the surface defined by surfToBeDef
     if (surfToBeDef == 2) {
-
         f2val *= surfFlag;
         grad2 *= surfFlag;
         if (hasObstacles) {
@@ -449,7 +425,6 @@ void PathPlanner::computeVelocityVector() {
     }
 
     // normalize the results
-
     double f1n = f1val;
     double f2n = f2val;
     if (grad1.norm() != 0) {
@@ -509,17 +484,8 @@ void PathPlanner::run(){
     if (hasObstacles && Xo.size() > 0) {
         computeObstaclesDistances();
         computeSensedObstacles();
-        if(run_time) {
-            computeObstaclesAmplitude();
-        }else{
-            //if the run_time parameter is false, all parameters are used: A1 is used when surfFlag==1, A2 is used when surfFlag==2.
-            if (surfFlag == 1) {
-                A = A1;
-            } else {
-                A = A2;
-            }
-        }
-        computeIntermediateVariables();
+        computeObstaclesAmplitude();
+//        computeIntermediateVariables();
         computeObstaclesContribution();
     }
     computeVelocityVector();
