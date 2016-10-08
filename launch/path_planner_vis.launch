@@ -1,48 +1,37 @@
-<!-- Launch file for path planner -->
-
 <launch>
 
+	<arg name="record_trajectory" default="false" />	
+	<arg name="publish_vector_field" default="false" />
+	
 	<include file="$(find path_planner)/launch/octomap_mapping_kinect.launch"/>
 			
 	<node pkg="path_planner" type="path_planner_node" name="path_planner_node" output="screen">
-		
-		<!-- Change to fixed frame id -->		
 		<param name="frame_id" type="string" value="world" />
-		
-		<!--Surface to be deformed. it can be 1 or 2 -->						
-		<param name="surfToBeDef" type="int" value="1" />
-		
-		<!--Define side on which obstacles are avoided and direction of motion -->
 		<param name="surfFlag" type="int" value="-1" />
+		<param name="surfToBeDef" type="int" value="1" />
 		<param name="tangFlag" type="int" value="1" />
-
-		<!-- Amplitude of obstacle functions-->
 		<param name="sigma_multiplier" type="double" value="15" />
-
-		<!--Gains for the output velocity vector-->				
 		<param name="xyGain" type="double" value="0.07" />
 		<param name="zGain" type="double" value="0.1" />
-		
-		<!--Gains for the contributes of gradient and tangent components-->		
 		<param name="Kgrad1" type="double" value="0.1" />
 		<param name="Kgrad2" type="double" value="0.1" />
 		<param name="Ktang" type="double" value="0.7" />
-		
-		<!--Maximum distance at which obstacles are sensed-->
 		<param name="dist_sensed_obs" type="double" value="0.9" />
-
-		<!-- Size of obstacles is increased by this parameter-->
-		<param name="safety_margin" type="double" value="0.4" />
-		
-		<!--Raises up the input map. For test purposes-->
 		<param name="pcRaise" type="double" value="0.0" />
+		<param name="safety_margin" type="double" value="0.4" />
+		<param name="publish_vector_field" type="bool" value="$(arg publish_vector_field)"/>
 
-		<!-- remap to your topic name-->
 		<remap from="map_in" to="octomap_full" />
 		<remap from="pose_in" to="Robot_1/pose"/>
 		<remap from="command_out" to="fcu/control"/>
-
-		<param name="publish_vector_field" type="bool" value="$(arg publish_vector_field)"/>
 	</node>
 
+	<node pkg="hector_trajectory_server" type="hector_trajectory_server" name="hector_trajectory_server" output="screen">
+		<param name="target_frame_name" type="string" value="world" />
+		<param name="source_frame_name" type="string" value="Robot_1/base_link" />
+	</node>
+
+	<node pkg="rosbag" type="record" name="rosbag_record_trajectory"
+	       args="-o $(find path_planner)/bags/trajectories/trajectory /octomap_full /occupied_cells_vis_array /path_planner_node/velocity_vector_marker /trajectory /tf"
+	       if="$(arg record_trajectory)" />
 </launch>

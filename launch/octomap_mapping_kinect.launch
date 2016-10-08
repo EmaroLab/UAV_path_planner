@@ -1,0 +1,37 @@
+<!-- 
+  Listens to incoming PointCloud2 data from Kinect and incrementally builds an octomap. 
+  The data is sent out in different representations. 
+-->
+<launch>
+	<include file="$(find freenect_launch)/launch/freenect.launch"/>
+
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+		<param name="resolution" value="0.05" />
+		
+		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+		<param name="frame_id" type="string" value="world" />
+		<param name="base_frame_id" type="string" value="world" />
+		
+		<param name="latch" type="bool" value="false" />
+		<param name ="ground_filter/plane_distance" value="0.2"/>
+		<param name="filter_ground" type="bool" value="false"/>
+
+		<!-- maximum range to integrate (speedup!) -->
+		<param name="sensor_model/max_range" value="3" />
+		
+		<param name="sensor_model/hit" value="0.7" />
+		<param name="sensor_model/miss" value="0.4" />
+		<param name="sensor_model/min" value="0.12" />
+		<param name="sensor_model/max" value="0.97" />
+		
+		<!-- data source to integrate (PointCloud2) -->
+		<remap from="cloud_in" to="/camera/depth/subsampled_points" />
+	
+
+	</node>
+
+	<node pkg="tf" type="static_transform_publisher" name="robot_to_kinect" args="0.09 0 -0.03 0 -0.25 0 Robot_1/base_link camera_link 10"/>
+
+	<node pkg="point_cloud_clustering" type="downsampling" name="downsampling" />
+
+</launch>
