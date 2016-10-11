@@ -30,6 +30,7 @@ add_library(path_planner
         lib/plane.cpp)
 
 add_executable(path_planner_node src/path_planner_node.cpp)
+add_executable(point_cloud_downsampling src/point_cloud_downsampling.cpp)
 
 include_directories(
         include
@@ -39,7 +40,13 @@ include_directories(
 link_libraries(
         ${OCTOMAP_LIBRARIES}
 )
-target_link_libraries(path_planner_node
+
+target_link_libraries(
+        point_cloud_downsampling
+        ${catkin_LIBRARIES})
+
+target_link_libraries(
+        path_planner_node
         path_planner
         ${catkin_LIBRARIES}
         )

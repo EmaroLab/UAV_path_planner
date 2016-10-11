@@ -131,7 +131,7 @@ private:
     //obstacles farther than this threshold are not considered
     double dist_sensed_obs;
 
-    //Logical Array to determine which obstacles to consider
+    //Array to determine how much every obstacle contributes
     Eigen::ArrayXd o_sensed;
     int numSensedObs;
 

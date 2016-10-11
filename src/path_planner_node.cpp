@@ -11,6 +11,7 @@
 PathPlanner* pathPlanner;
 double pcRaise;
 bool publish_vector_field;
+std::string frame_id;
 
 
 void getParams(ros::NodeHandle &nh);
@@ -64,7 +65,7 @@ int main (int argc, char** argv) {
 
     //Constant values of the velocity message
     velocityMsg.type = asctec_hl_comm::mav_ctrl::velocity;
-    velocityMsg.header.frame_id = "world";
+    velocityMsg.header.frame_id = frame_id;
 
     std::vector<asctec_hl_comm::mav_ctrl> command_window(1);
 
@@ -124,7 +125,7 @@ int main (int argc, char** argv) {
         velocityMsg.yaw = pathPlanner->computeYawCommand();
 
         //Topic to visualize the velocity vector in Rviz
-        visualization_vector.header.frame_id = "world";
+        visualization_vector.header.frame_id = frame_id;
         visualization_vector.points.clear();
         visualization_vector.points.push_back(robotPose.pose.position);
         vectorTip.x = robotPose.pose.position.x + velocityMsg.x*7;
@@ -176,7 +177,7 @@ void publishVectorField(ros::NodeHandle &nh) {
             pathPlanner->setRobotPose(x, y, 0.4, tf::Quaternion(0, 0, 0, 1));
             pathPlanner->run();
             velocityVector = pathPlanner->getVelocityVector();
-            visualization_vector.header.frame_id = "world";
+            visualization_vector.header.frame_id = frame_id;
             visualization_vector.id = id;
             visualization_vector.type = visualization_msgs::Marker::ARROW;
             visualization_vector.points.clear();
@@ -217,7 +218,6 @@ void getParams(ros::NodeHandle &nh) {
     int surfToBeDef;
     int surfFlag;
     int tangFlag;
-    std::string frame_id;
     double sigma_multiplier;
     double xyGain;
     double zGain;

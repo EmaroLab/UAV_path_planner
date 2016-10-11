@@ -3,8 +3,11 @@
   The data is sent out in different representations. 
 -->
 <launch>
+
+	<!-- Launching Kinect drivers -->
 	<include file="$(find freenect_launch)/launch/freenect.launch"/>
 
+	<!-- Launching the octomap server -->
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
 		<param name="resolution" value="0.05" />
 		
@@ -13,25 +16,29 @@
 		<param name="base_frame_id" type="string" value="world" />
 		
 		<param name="latch" type="bool" value="false" />
-		<param name ="ground_filter/plane_distance" value="0.2"/>
-		<param name="filter_ground" type="bool" value="false"/>
 
-		<!-- maximum range to integrate (speedup!) -->
+		<!-- Set to true to filter the ground plane. The base_frame_id should lie on this plane -->
+		<param name="filter_ground" type="bool" value="false"/>
+		<param name ="ground_filter/plane_distance" value="0.2"/>
+
+		<!-- maximum sensor range to integrate in the map. Reduce for increased performances -->
 		<param name="sensor_model/max_range" value="3" />
-		
+
+		<!--Threshold probabilities for a voxel to be considered free or occupied.-->
 		<param name="sensor_model/hit" value="0.7" />
 		<param name="sensor_model/miss" value="0.4" />
+		<!--Lower and upper bound for probabilities clamping -->
 		<param name="sensor_model/min" value="0.12" />
 		<param name="sensor_model/max" value="0.97" />
 		
-		<!-- data source to integrate (PointCloud2) -->
+		<!-- Remap to the name of your pointcloud -->
 		<remap from="cloud_in" to="/camera/depth/subsampled_points" />
-	
-
 	</node>
 
+	<!--The octomap_server requires the transformation between the fixed frame and the sensor. Given the robot pose this closes the chain.-->
 	<node pkg="tf" type="static_transform_publisher" name="robot_to_kinect" args="0.09 0 -0.03 0 -0.25 0 Robot_1/base_link camera_link 10"/>
 
-	<node pkg="point_cloud_clustering" type="downsampling" name="downsampling" />
+	<!--Node to downsample input point cloud-->
+	<node pkg="path_planner" type="point_cloud_downsampling" name="downsampling" />
 
 </launch>

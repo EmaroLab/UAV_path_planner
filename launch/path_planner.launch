@@ -1,10 +1,14 @@
-<!-- Launch file for path planner -->
+<!-- Launch file for path planner.  -->
 
 <launch>
 
+	<arg name="record_trajectory" default="false" />
+	<arg name="publish_vector_field" default="false"/>
+
+	<!-- Launching the Octomap server and the drivers of the Kinect-->
 	<include file="$(find path_planner)/launch/octomap_mapping_kinect.launch"/>
-			
-	<node pkg="path_planner" type="path_planner_node" name="path_planner_node" output="screen">
+
+	<node pkg="path_planner" type="path_planner_node" name="path_planner_node">
 		
 		<!-- Change to fixed frame id -->		
 		<param name="frame_id" type="string" value="world" />
@@ -42,7 +46,16 @@
 		<remap from="pose_in" to="Robot_1/pose"/>
 		<remap from="command_out" to="fcu/control"/>
 
+		<!-- If this is true then the vector field is published and then the node killed. Requires a map to be published-->
 		<param name="publish_vector_field" type="bool" value="$(arg publish_vector_field)"/>
 	</node>
 
+	<node pkg="hector_trajectory_server" type="hector_trajectory_server" name="hector_trajectory_server" if="$(arg record_trajectory)">
+		<param name="target_frame_name" type="string" value="world" />
+		<param name="source_frame_name" type="string" value="Robot_1/base_link" />
+	</node>
+
+	<node pkg="rosbag" type="record" name="rosbag_record_trajectory"
+		  args="-o $(find path_planner)/bags/trajectories/trajectory /octomap_full /occupied_cells_vis_array /path_planner_node/velocity_vector_marker /trajectory /tf"
+		  if="$(arg record_trajectory)" />
 </launch>
